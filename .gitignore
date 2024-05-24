@@ -5,4 +5,4 @@ dist
 .env
 coverage
 .cache/
-.pem
+mongo.pem
