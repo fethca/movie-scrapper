@@ -34,9 +34,9 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t fethca/white-app:latest .
+          docker build -t fethca/movie-scrapper:latest .
           docker login -u "$DOCKER_USERNAME" -p "$DOCKER_TOKEN"
-          docker push fethca/white-app:latest
+          docker push fethca/movie-scrapper:latest
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
@@ -49,7 +49,7 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            if [ "$(docker ps -q --filter "name=white-app")" ]; then docker stop white-app && docker rm white-app; fi
-            if [ "$(docker images -q 'fethca/white-app')" ]; then docker rmi fethca/white-app; fi
+            if [ "$(docker ps -q --filter "name=movie-scrapper")" ]; then docker stop movie-scrapper && docker rm movie-scrapper; fi
+            if [ "$(docker images -q 'fethca/movie-scrapper')" ]; then docker rmi fethca/movie-scrapper; fi
             cd ~/traefik
-            docker-compose up -d --remove-orphans white-app
+            docker-compose up -d --remove-orphans movie-scrapper
