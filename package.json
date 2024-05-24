@@ -1,0 +1,84 @@
+{
+  "name": "movie-scrapper",
+  "version": "0.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "format": "prettier -w \"{src,tests}/**/*.{ts,tsx}\"",
+    "lint": "eslint \"{src,tests}/**/*.{ts,tsx}\"",
+    "test:unit": "vitest run --coverage",
+    "start:dev": "nodemon -r dotenv/config --inspect=9999 src/index.ts",
+    "version:patch": "fethca-version patch",
+    "version:minor": "fethca-version minor",
+    "version:major": "fethca-version major"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fethca/movie-scrapper.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fethca/movie-scrapper/issues"
+  },
+  "homepage": "https://github.com/fethca/movie-scrapper#readme",
+  "dependencies": {
+    "@fethcat/config": "^0.0.2",
+    "@fethcat/logger": "^1.0.2",
+    "@fethcat/shared": "^0.0.7",
+    "@fethcat/store": "^0.0.2",
+    "@fethcat/validator": "^0.0.5",
+    "@vitest/coverage-v8": "^1.6.0",
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "envalid": "^8.0.0",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.2.0",
+    "helmet": "^7.1.0",
+    "lodash.isequal": "^4.5.0",
+    "lodash.uniq": "^4.5.0",
+    "luxon": "^3.4.4",
+    "mockdate": "^3.0.5",
+    "mongoose": "^8.4.0",
+    "vitest": "^1.6.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@fethcat/eslint-plugin": "^0.0.3",
+    "@fethcat/prettier-config": "^1.0.5",
+    "@fethcat/tests": "^0.0.15",
+    "@fethcat/version": "^0.0.12",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/lodash.isequal": "^4.5.8",
+    "@types/lodash.uniq": "^4.5.9",
+    "@types/luxon": "^3.4.2",
+    "@types/node": "^20.12.12",
+    "nodemon": "^3.1.0",
+    "prettier": "^3.2.5",
+    "tsx": "^4.11.0",
+    "typescript": "^5.4.5"
+  },
+  "prettier": "@fethcat/prettier-config",
+  "nodemonConfig": {
+    "restartable": "rs",
+    "ignore": [
+      ".git",
+      "node_modules/**/node_modules"
+    ],
+    "execMap": {
+      "ts": "tsx"
+    },
+    "watch": [
+      "src/"
+    ],
+    "ext": "js,json,ts"
+  },
+  "eslintConfig": {
+    "extends": [
+      "plugin:@fethcat/back"
+    ]
+  }
+}
