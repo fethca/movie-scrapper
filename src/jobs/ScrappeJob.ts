@@ -16,7 +16,6 @@ import {
 import isEqual from 'lodash.isequal'
 import uniq from 'lodash.uniq'
 import { DateTime } from 'luxon'
-import { ZodError } from 'zod'
 import { getMoviesQuery } from '../helpers/graphql.js'
 import { radarr, request } from '../services.js'
 import { Message, settings } from '../settings.js'
@@ -80,11 +79,6 @@ export class ScrappeJob {
       success()
       return data
     } catch (error) {
-      if (error instanceof ZodError) {
-        if (error.issues[0].path[0] != 'category') {
-          console.log('Wath')
-        }
-      }
       failure(error)
     }
   }
@@ -109,7 +103,7 @@ export class ScrappeJob {
         return
       }
 
-      const tmdb = await this.matchTMDB(movie, existingRecord?.tmdb.searchQuery || existingRecord?.tmdb.tmdbId || 0)
+      const tmdb = await this.matchTMDB(movie, existingRecord?.tmdb?.searchQuery || existingRecord?.tmdb?.tmdbId || 0)
       const body = this.formatMovie(movie, tmdb, scPopularity, existingRecord)
 
       if (!this.isEqual(body, existingRecord)) opsDatas.lastUpdateDate = now
@@ -160,7 +154,10 @@ export class ScrappeJob {
       if (!matches.length && prodYear && original) matches = await radarr.tmdbLookup(`${original} ${prodYear}`)
       if (!matches.length) matches = await radarr.tmdbLookup(`${title} ${year}`)
       if (!matches.length) matches = await radarr.tmdbLookup(`${title}`)
-      if (!matches.length) throw new Error("can't find movie")
+      if (!matches.length) {
+        await this.handleUnfound(movie)
+        throw new Error("can't find movie")
+      }
 
       const ratedMatches: { tmdb: ITmdb; score: number }[] = []
       for (const match of matches) {
@@ -194,6 +191,20 @@ export class ScrappeJob {
 
       success()
       return tmdbSchemaFormat.parse(bestMatch.tmdb)
+    } catch (error) {
+      throw failure(error)
+    }
+  }
+
+  async handleUnfound(movie: IMovieSC) {
+    const { success, failure } = this.logger.action('handle_unfound_movie')
+    try {
+      const now = DateTime.now().toMillis()
+      const opsDatas = { lastJobDate: now, lastUpdateDate: now, unfound: true }
+      const data = { id: movie.id, senscritique: { ...movie, popularity: 0 }, opsDatas }
+      const body = movieSchema.parse(data)
+      await Movie.findOneAndUpdate({ id: movie.id }, { ...body, opsDatas }, { upsert: true })
+      success()
     } catch (error) {
       throw failure(error)
     }
@@ -239,10 +250,12 @@ export class ScrappeJob {
       const tmdbPopMax = await getMax(Movie, 'tmdb.popularity')
       const { ratingCount, wishCount } = movie.senscritique.stats
 
+      if (!wishMax || !ratingMax || !tmdbPopMax) return 0
+
       let ageBonus = 0
       if (age <= 1) ageBonus = (wishCount * 10) / wishMax
       const ratingScore = (ratingCount * 10) / ratingMax + ageBonus
-      const tmdbScore = (movie.tmdb.popularity * 10) / tmdbPopMax
+      const tmdbScore = (movie.tmdb?.popularity || 0 * 10) / tmdbPopMax
       const scScore = (movie.senscritique.popularity * 10) / 10000
       const popularity = ratingScore + tmdbScore + scScore
       success({ popularity })
