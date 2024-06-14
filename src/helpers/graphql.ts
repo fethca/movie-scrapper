@@ -38,7 +38,7 @@ const movieQL = `{
     reviewCount
     wishCount
   }
-  polls(limit: 8) {
+  polls(limit: 100) {
     poll {
       id
       label

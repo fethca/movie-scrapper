@@ -1,5 +1,5 @@
 import { Logger } from '@fethcat/logger'
-import { connect } from '@fethcat/shared'
+import { connect } from '@fethcat/shared/mongo'
 import cors from 'cors'
 import express, { json, urlencoded } from 'express'
 import helmet from 'helmet'
