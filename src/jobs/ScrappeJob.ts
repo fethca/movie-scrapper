@@ -1,18 +1,15 @@
 import { ILogger, Logger } from '@fethcat/logger'
+import { formatNgrams, getMax, rate, slugTitle } from '@fethcat/shared/helpers'
+import { Movie } from '@fethcat/shared/mongo'
 import {
   IMovie,
   IMovieSC,
   IRequestSC,
   ITmdb,
-  Movie,
-  formatNgrams,
-  getMax,
   movieSchema,
-  rate,
   scMovieSchema,
-  slugTitle,
   tmdbSchemaFormat,
-} from '@fethcat/shared'
+} from '@fethcat/shared/types'
 import isEqual from 'lodash.isequal'
 import uniq from 'lodash.uniq'
 import { DateTime } from 'luxon'
@@ -108,7 +105,8 @@ export class ScrappeJob {
 
       if (!this.isEqual(body, existingRecord)) opsDatas.lastUpdateDate = now
       const popularity = await this.calculatePopularity(body)
-      await Movie.findOneAndUpdate({ id: movie.id }, { ...body, popularity, opsDatas }, { upsert: true })
+      const providers = existingRecord?.providers || []
+      await Movie.findOneAndUpdate({ id: movie.id }, { ...body, popularity, opsDatas, providers }, { upsert: true })
       success()
     } catch (error) {
       failure(error)
@@ -257,7 +255,7 @@ export class ScrappeJob {
       const ratingScore = (ratingCount * 10) / ratingMax + ageBonus
       const tmdbScore = (movie.tmdb?.popularity || 0 * 10) / tmdbPopMax
       const scScore = (movie.senscritique.popularity * 10) / 10000
-      const popularity = ratingScore + tmdbScore + scScore
+      const popularity = (ratingScore > 10 ? 10 : ratingScore) + tmdbScore + scScore
       success({ popularity })
       return popularity
     } catch (error) {

@@ -1,4 +1,4 @@
-import { extractPackageJson } from '@fethcat/shared'
+import { extractPackageJson } from '@fethcat/shared/helpers'
 import { logsValidators, mongoValidators, validateEnv } from '@fethcat/validator'
 import { randomBytes } from 'crypto'
 import { bool, num, str } from 'envalid'

@@ -1,10 +1,9 @@
 import { ConfigService } from '@fethcat/config'
-import { ITmdb } from '@fethcat/shared'
+import { ITmdb } from '@fethcat/shared/types'
 import { request } from '../services.js'
 import { settings } from '../settings.js'
 
 type Config = { formatItems: { format: number; score: number }[] }[]
-type IParsed = { customFormats: { id: number }[]; parsedMovieInfo: { movieTitles: string[] } }
 const { url, key } = settings.radarr
 
 export class RadarrService extends ConfigService<Config> {
@@ -19,11 +18,6 @@ export class RadarrService extends ConfigService<Config> {
     } catch (error) {
       throw new Error('Failed to load radarr config')
     }
-  }
-
-  async parseTorrent(name: string) {
-    const { data } = await request<IParsed>(`${url}/parse`, { params: { title: name, apiKey: key } })
-    return data
   }
 
   async tmdbLookup(term: string) {
