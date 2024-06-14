@@ -1,5 +1,5 @@
 import { MockedLogger, mockAction } from '@fethcat/logger'
-import * as mongo from '@fethcat/shared'
+import * as mongo from '@fethcat/shared/mongo'
 import cors from 'cors'
 import express, { json, urlencoded } from 'express'
 import helmet from 'helmet'
@@ -14,10 +14,7 @@ vi.mock('cors')
 vi.mock('../../src/jobs/MainJob')
 vi.mock('express')
 vi.mock('../../src/router.js')
-vi.mock('@fethcat/shared', async () => {
-  const shared = await vi.importActual('@fethcat/shared')
-  return { ...shared, connect: vi.fn() }
-})
+vi.mock('@fethcat/shared/mongo')
 
 describe('run', () => {
   function createApp() {
