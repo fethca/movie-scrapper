@@ -15,8 +15,8 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2(@types/node@20.14.2)
       '@fethcat/shared':
-        specifier: ^0.0.15
-        version: 0.0.15(@types/node@20.14.2)(vitest@1.6.0(@types/node@20.14.2))
+        specifier: ^0.0.16
+        version: 0.0.16(@types/node@20.14.2)(vitest@1.6.0(@types/node@20.14.2))
       '@fethcat/store':
         specifier: ^0.0.2
         version: 0.0.2(@types/node@20.14.2)
@@ -106,8 +106,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       tsx:
-        specifier: ^4.15.4
-        version: 4.15.4
+        specifier: ^4.15.6
+        version: 4.15.6
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -310,8 +310,8 @@ packages:
   '@fethcat/prettier-config@1.0.5':
     resolution: {integrity: sha512-CshSPFuocowU50z6Q21ONpf236sFGx+FyyScBR3b4ocBRrSnZTdNnpUXpyVuYvt2IJd2nREqv1Y7PZ47qcjkPg==}
 
-  '@fethcat/shared@0.0.15':
-    resolution: {integrity: sha512-fBK2YA+VWYkCo+sfzy4pCeQnLoQdI5mkUZuZClBbIVuWPzUCvzJcxLDR+oU/adKmmDr+GMAAX72oiOLUQS8zXQ==}
+  '@fethcat/shared@0.0.16':
+    resolution: {integrity: sha512-ow6X9+sb32NFokMFl+FJTpCs0nyftulspuqQ5iAuMYq2Uu6RuQ17yn88FGq7XuTvFfl44geDy0CP7PNSHE9bjg==}
 
   '@fethcat/shared@0.0.3':
     resolution: {integrity: sha512-NF5+NgEKcNOG5Ay+vuqyK5iZRBO151DUei4/o1LO1JfH8/aTVV7yY7MngHTjKRFj9olU27WxPEP2WVNU4jWcfw==}
@@ -2139,8 +2139,8 @@ packages:
     peerDependencies:
       typescript: '>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta'
 
-  tsx@4.15.4:
-    resolution: {integrity: sha512-d++FLCwJLrXaBFtRcqdPBzu6FiVOJ2j+UsvUZPtoTrnYtCGU5CEW7iHXtNZfA2fcRTvJFWPqA6SWBuB0GSva9w==}
+  tsx@4.15.6:
+    resolution: {integrity: sha512-is0VQQlfNZRHEuSSTKA6m4xw74IU4AizmuB6lAYLRt9XtuyeQnyJYexhNZOPCB59SqC4JzmSzPnHGBXxf3k0hA==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
@@ -2500,7 +2500,7 @@ snapshots:
 
   '@fethcat/prettier-config@1.0.5': {}
 
-  '@fethcat/shared@0.0.15(@types/node@20.14.2)(vitest@1.6.0(@types/node@20.14.2))':
+  '@fethcat/shared@0.0.16(@types/node@20.14.2)(vitest@1.6.0(@types/node@20.14.2))':
     dependencies:
       '@fethcat/validator': 0.0.5(@types/node@20.14.2)(envalid@8.0.0)
       '@vitest/coverage-v8': 1.6.0(vitest@1.6.0(@types/node@20.14.2))
@@ -4674,7 +4674,7 @@ snapshots:
       tslib: 1.14.1
       typescript: 5.4.5
 
-  tsx@4.15.4:
+  tsx@4.15.6:
     dependencies:
       esbuild: 0.21.5
       get-tsconfig: 4.7.5
