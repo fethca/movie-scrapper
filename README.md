@@ -13,7 +13,7 @@ Before installing movie-scrapper, ensure you have the following prerequisites me
 
 ### Installation
 
-To install the required node modules for Nova Boop, run the following command:
+To install the required node modules for movie-scrapper, run the following command:
 
 ```sh
 pnpm install
