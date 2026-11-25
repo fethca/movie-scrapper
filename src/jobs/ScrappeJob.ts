@@ -129,7 +129,7 @@ export class ScrappeJob {
         return false
       }
       success()
-      return false
+      return true
     } catch (error) {
       throw failure(error)
     }
@@ -253,7 +253,7 @@ export class ScrappeJob {
       let ageBonus = 0
       if (age <= 1) ageBonus = (wishCount * 10) / wishMax
       const ratingScore = (ratingCount * 10) / ratingMax + ageBonus
-      const tmdbScore = (movie.tmdb?.popularity || 0 * 10) / tmdbPopMax
+      const tmdbScore = ((movie.tmdb?.popularity || 0) * 10) / tmdbPopMax
       const scScore = (movie.senscritique.popularity * 10) / 10000
       const popularity = (ratingScore > 10 ? 10 : ratingScore) + tmdbScore + scScore
       success({ popularity })
