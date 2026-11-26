@@ -41,7 +41,7 @@
     "lodash.uniq": "^4.5.0",
     "luxon": "^3.7.2",
     "mongoose": "^8.24.11",
-    "zod": "^3.25.76"
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "@fethcat/eslint-plugin": "^0.0.3",
