@@ -1,4 +1,4 @@
-name: Build Docker Image
+name: Deploy
 
 on:
   push:
@@ -7,75 +7,5 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-      # Setup Node environment
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.9.0'
-          cache: 'pnpm'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Install dependencies
-        run: |
-          pnpm install
-
-      - name: Lint, format & tests
-        run: |
-          pnpm lint
-          pnpm format --check
-          pnpm test:unit
-
-      - name: Build and push Docker image
-        run: |
-          docker build -t fethca/movie-scrapper:latest .
-          docker login -u "$DOCKER_USERNAME" -p "$DOCKER_TOKEN"
-          docker push fethca/movie-scrapper:latest
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-
-      - name: Deploy new image
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_KEY }}
-          port: ${{ secrets.VPS_PORT }}
-          script: |
-            # Stopping running containers
-            echo "step: stopping running containers"
-            for container in $(docker ps -q --filter "name=movie-scrapper-"); do
-              echo "step: stopping container"
-              docker stop $container
-            done
-            echo "step: stopped running containers"
-
-            # Removing existing containers
-            echo "step: removing existing containers"
-            for container in $(docker ps -a -q --filter "name=movie-scrapper-"); do
-              echo "step: removing container"
-              docker rm $container
-            done
-            echo "step: removed existing containers"
-
-            # Removing latest image
-            echo "step: removing latest image"
-            if [ "$(docker images -q 'fethca/movie-scrapper')" ]; then docker rmi fethca/movie-scrapper; fi
-            echo "step: removed latest image"
-
-            cd ~/traefik
-            services=$(docker-compose config --services)
-
-            # Starting the services
-            echo "step: starting the services"
-            echo "$services" | while read -r service; do
-              if [[ $service == movie-scrapper-* ]]; then
-                echo "step: starting service"
-                docker-compose up --remove-orphans -d $service
-              fi
-            done
-            echo "step: started the services"
+    uses: fethca/.github/.github/workflows/deploy-app.yml@main
+    secrets: inherit
