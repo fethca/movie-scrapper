@@ -16,7 +16,7 @@ export class RadarrService extends ConfigService<Config> {
       const { data } = await request<Config>(`${url}/qualityprofile`, { method: 'GET', params: { apiKey: key } })
       return data
     } catch (error) {
-      throw new Error('Failed to load radarr config')
+      throw new Error('Failed to load radarr config', { cause: error })
     }
   }
 
