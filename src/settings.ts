@@ -52,7 +52,7 @@ export const settings = {
   },
 }
 
-const messages = [
+export const messages = [
   'calculate_popularity',
   'format_movie',
   'handle_unfound_movie',
