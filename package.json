@@ -27,7 +27,7 @@
   "dependencies": {
     "@fethcat/config": "^0.0.5",
     "@fethcat/logger": "^1.0.3",
-    "@fethcat/shared": "^0.0.17",
+    "@fethcat/shared": "^0.0.18",
     "@fethcat/store": "^0.0.3",
     "@fethcat/validator": "^0.0.6",
     "axios": "^1.21.1",
@@ -41,7 +41,7 @@
     "lodash.uniq": "^4.5.0",
     "luxon": "^3.7.2",
     "mongoose": "^8.24.11",
-    "zod": "^3.25.76"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@fethcat/eslint-plugin": "^0.0.3",
@@ -60,7 +60,7 @@
     "prettier": "^3.10.1",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
-    "vite": "^8.3.8",
+    "vite": "^8.4.0",
     "vitest": "^5.1.2"
   },
   "prettier": "@fethcat/prettier-config",
