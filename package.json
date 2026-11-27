@@ -27,7 +27,7 @@
   "dependencies": {
     "@fethcat/config": "^0.0.5",
     "@fethcat/logger": "^1.0.3",
-    "@fethcat/shared": "^0.0.18",
+    "@fethcat/shared": "^0.0.20",
     "@fethcat/store": "^0.0.3",
     "@fethcat/validator": "^0.0.6",
     "axios": "^1.21.1",
