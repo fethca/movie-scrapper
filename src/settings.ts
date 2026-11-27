@@ -65,7 +65,6 @@ export const messages = [
   'should_update',
   'start_server',
   'tmdb_match',
-  'tmdb_several_matches',
 ] as const
 
 export type Message = (typeof messages)[number]

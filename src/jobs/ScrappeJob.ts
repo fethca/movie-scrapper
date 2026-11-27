@@ -1,5 +1,5 @@
 import { ILogger, Logger } from '@fethcat/logger'
-import { formatNgrams, getMax, rate, slugTitle } from '@fethcat/shared/helpers'
+import { formatNgrams, getMax } from '@fethcat/shared/helpers'
 import { Movie } from '@fethcat/shared/mongo'
 import {
   IMovie,
@@ -14,6 +14,7 @@ import isEqual from 'lodash.isequal'
 import uniq from 'lodash.uniq'
 import { DateTime } from 'luxon'
 import { getMoviesQuery } from '../helpers/graphql.js'
+import { lookupTerms, pickMatch } from '../helpers/tmdb.js'
 import { radarr, request } from '../services.js'
 import { Message, settings } from '../settings.js'
 
@@ -100,7 +101,7 @@ export class ScrappeJob {
         return
       }
 
-      const tmdb = await this.matchTMDB(movie, existingRecord?.tmdb?.searchQuery || existingRecord?.tmdb?.tmdbId || 0)
+      const tmdb = await this.matchTMDB(movie, existingRecord?.tmdb)
       const body = this.formatMovie(movie, tmdb, scPopularity, existingRecord)
 
       if (!this.isEqual(body, existingRecord)) opsDatas.lastUpdateDate = now
@@ -141,54 +142,29 @@ export class ScrappeJob {
     return isEqual(schema.parse(movie), schema.parse(existingRecord))
   }
 
-  async matchTMDB(movie: IMovieSC, searchQuery: number): Promise<ITmdb> {
+  async matchTMDB(movie: IMovieSC, existing?: ITmdb): Promise<ITmdb> {
     const { success, failure } = this.logger.action('tmdb_match')
     try {
-      let matches: ITmdb[] = []
-      if (searchQuery) matches = await radarr.getTmdb(searchQuery)
-      const { yearOfProduction: prodYear, originalTitle: original, title, duration, dateRelease } = movie
-      const year = dateRelease?.slice(0, 4) || ''
-      if (!matches.length && original) matches = await radarr.tmdbLookup(`${original} ${year}`)
-      if (!matches.length && prodYear && original) matches = await radarr.tmdbLookup(`${original} ${prodYear}`)
-      if (!matches.length) matches = await radarr.tmdbLookup(`${title} ${year}`)
-      if (!matches.length) matches = await radarr.tmdbLookup(`${title}`)
-      if (!matches.length) {
+      const searchQuery = existing?.searchQuery || 0
+      if (searchQuery) {
+        const [tmdb] = await radarr.getTmdb(searchQuery)
+        success()
+        return tmdbSchemaFormat.parse({ ...tmdb, searchQuery })
+      }
+
+      let match = existing?.tmdbId ? pickMatch(movie, await radarr.getTmdb(existing.tmdbId)) : undefined
+      for (const term of lookupTerms(movie)) {
+        if (match) break
+        match = pickMatch(movie, await radarr.tmdbLookup(term))
+      }
+
+      if (!match) {
         await this.handleUnfound(movie)
         throw new Error("can't find movie")
       }
 
-      const ratedMatches: { tmdb: ITmdb; score: number }[] = []
-      for (const match of matches) {
-        const { title, originalTitle, cleanTitle } = match
-        const set = [title, originalTitle, cleanTitle, slugTitle(originalTitle)].filter(Boolean)
-
-        const titleScore = rate(set, title)
-        const originalTitleScore = rate(set, original)
-
-        ratedMatches.push({ tmdb: match, score: titleScore > originalTitleScore ? originalTitleScore : titleScore })
-      }
-
-      const bestScore = ratedMatches.sort((a, b) => a.score - b.score)[0].score
-      const bestMatches = ratedMatches.filter((match) => match.score === bestScore)
-
-      let [bestMatch] = bestMatches
-      if (bestMatches.length > 1) {
-        const metaRated = bestMatches.map((match) => {
-          let score = 0
-          if (duration) score += Math.abs(match.tmdb.runtime * 60 - duration)
-          const tmdbInCinemas = Number(match.tmdb.inCinemas?.slice(0, 4))
-          const scDate = Number(dateRelease?.slice(0, 4) || 0)
-          if (tmdbInCinemas) score += Math.abs(tmdbInCinemas - scDate)
-          score += Math.abs(match.tmdb.year - scDate)
-          return { ...match, score }
-        })
-
-        this.logger.info('tmdb_several_matches', { matches: metaRated })
-        bestMatch = metaRated.sort((a, b) => a.score - b.score)[0]
-      }
-
       success()
-      return tmdbSchemaFormat.parse(bestMatch.tmdb)
+      return tmdbSchemaFormat.parse(match)
     } catch (error) {
       throw failure(error)
     }

@@ -1,10 +1,11 @@
 import { MockedLogger } from '@fethcat/logger'
 import { getMax } from '@fethcat/shared/helpers'
 import { Movie } from '@fethcat/shared/mongo'
-import { IMovie, IMovieSC } from '@fethcat/shared/types'
+import { IMovie, IMovieSC, ITmdb } from '@fethcat/shared/types'
 import { DateTime } from 'luxon'
 import mockdate from 'mockdate'
 import { ScrappeJob } from '../../../src/jobs/ScrappeJob.js'
+import { radarr } from '../../../src/services.js'
 import { settings } from '../../../src/settings.js'
 
 mockdate.set(1779611588000) //2026
@@ -104,5 +105,45 @@ describe('calculatePopularity', () => {
   it('should return 0 when a max is missing', async () => {
     vi.mocked(getMax).mockResolvedValue(0)
     expect(await createJob().calculatePopularity(movie(100))).toBe(0)
+  })
+})
+
+describe('matchTMDB', () => {
+  const scMovie = { id: 1, title: 'Inside Men', originalTitle: 'Nae-bu-ja-deul', yearOfProduction: 2015 } as IMovieSC
+  const radarrMovie = {
+    genres: [],
+    images: [],
+    originalLanguage: { id: 1, name: 'Korean' },
+    popularity: 1,
+    ratings: {},
+    runtime: 130,
+    sortTitle: '',
+    searchQuery: 0,
+    studio: '',
+    year: 2015,
+  }
+  const insideOut = { ...radarrMovie, title: 'Inside Out', originalTitle: 'Inside Out', cleanTitle: '', tmdbId: 1 }
+  const insideMen = { ...radarrMovie, title: 'Inside Men', originalTitle: 'Nae-bu-ja-deul', cleanTitle: '', tmdbId: 2 }
+
+  it('should trust a manual searchQuery and keep it', async () => {
+    vi.spyOn(radarr, 'getTmdb').mockResolvedValue([insideOut])
+    const tmdb = await createJob().matchTMDB(scMovie, { tmdbId: 1, searchQuery: 1 } as ITmdb)
+    expect(tmdb).toEqual(expect.objectContaining({ tmdbId: 1, searchQuery: 1 }))
+  })
+
+  it('should replace a previous wrong match with a lookup', async () => {
+    vi.spyOn(radarr, 'getTmdb').mockResolvedValue([insideOut])
+    vi.spyOn(radarr, 'tmdbLookup').mockResolvedValue([insideOut, insideMen])
+    const tmdb = await createJob().matchTMDB(scMovie, { tmdbId: 1, searchQuery: 0 } as ITmdb)
+    expect(tmdb.tmdbId).toBe(2)
+  })
+
+  it('should flag the movie as unfound when no candidate matches', async () => {
+    vi.spyOn(radarr, 'tmdbLookup').mockResolvedValue([insideOut])
+    vi.spyOn(Movie, 'findOneAndUpdate').mockResolvedValue(null)
+    const job = createJob()
+    const handleUnfound = vi.spyOn(job, 'handleUnfound').mockResolvedValue()
+    await expect(job.matchTMDB(scMovie)).rejects.toThrow("can't find movie")
+    expect(handleUnfound).toHaveBeenCalledWith(scMovie)
   })
 })
