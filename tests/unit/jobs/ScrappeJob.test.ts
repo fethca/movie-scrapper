@@ -147,3 +147,25 @@ describe('matchTMDB', () => {
     expect(handleUnfound).toHaveBeenCalledWith(scMovie)
   })
 })
+
+describe('groupEditions', () => {
+  it('should flag every movie sharing the tmdb id as an edition except the most rated one', async () => {
+    const sort = vi.fn().mockResolvedValue({ id: 7 })
+    vi.spyOn(Movie, 'findOne').mockReturnValue({ sort } as never)
+    const updateMany = vi.spyOn(Movie, 'updateMany').mockResolvedValue({} as never)
+
+    await createJob().groupEditions(42)
+
+    expect(sort).toHaveBeenCalledWith({ 'senscritique.stats.ratingCount': -1 })
+    expect(updateMany).toHaveBeenCalledWith({ 'tmdb.tmdbId': 42 }, [{ $set: { edition: { $ne: ['$id', 7] } } }])
+  })
+
+  it('should do nothing when no movie has the tmdb id', async () => {
+    vi.spyOn(Movie, 'findOne').mockReturnValue({ sort: vi.fn().mockResolvedValue(null) } as never)
+    const updateMany = vi.spyOn(Movie, 'updateMany')
+
+    await createJob().groupEditions(42)
+
+    expect(updateMany).not.toHaveBeenCalled()
+  })
+})

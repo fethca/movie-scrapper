@@ -55,6 +55,7 @@ export const settings = {
 export const messages = [
   'calculate_popularity',
   'format_movie',
+  'group_editions',
   'handle_unfound_movie',
   'init_db',
   'main_job',
