@@ -13,8 +13,12 @@ const editions = [
 const edition = `version (${versions.join('|')})|${editions.join('|')}`
 const editionPattern = new RegExp(`([\\s:,(\\[-]+(${edition})[\\s)\\]]*)+$`, 'i')
 
+type ICandidate = ITmdb & { alternateTitles?: { title: string }[] }
+
 const minSimilarity = 0.8
-const maxYearGap = 1
+const minContainedLength = 5
+const maxYearGap = 2
+const maxRuntimeGap = 5 * 60
 
 export function stripEdition(title: string) {
   return title
@@ -35,7 +39,9 @@ export function similarity(a: string, b: string) {
   const [left, right] = [normalizeTitle(a), normalizeTitle(b)]
   const digits = (title: string) => title.replace(/\D/g, '')
   if (!left || !right || digits(left) !== digits(right)) return 0
-  return 1 - distance(left, right) / Math.max(left.length, right.length)
+  const [shorter, longer] = [left, right].sort((a, b) => a.length - b.length)
+  const score = 1 - distance(left, right) / longer.length
+  return shorter.length >= minContainedLength && longer.includes(shorter) ? Math.max(score, minSimilarity) : score
 }
 
 function yearGap(movie: IMovieSC, tmdb: ITmdb) {
@@ -44,22 +50,33 @@ function yearGap(movie: IMovieSC, tmdb: ITmdb) {
   return Math.min(...years.map((year) => Math.abs(year - tmdb.year)))
 }
 
-function titleSimilarity(movie: IMovieSC, tmdb: ITmdb) {
+function titleSimilarity(movie: IMovieSC, tmdb: ICandidate) {
   const scTitles = [movie.title, movie.originalTitle].filter(Boolean) as string[]
-  const tmdbTitles = [tmdb.title, tmdb.originalTitle].filter(Boolean)
+  const alternateTitles = tmdb.alternateTitles?.map(({ title }) => title) || []
+  const tmdbTitles = [tmdb.title, tmdb.originalTitle, ...alternateTitles].filter(Boolean)
   return Math.max(...scTitles.flatMap((scTitle) => tmdbTitles.map((tmdbTitle) => similarity(scTitle, tmdbTitle))))
 }
 
 function runtimeGap(movie: IMovieSC, tmdb: ITmdb) {
-  return movie.duration && tmdb.runtime ? Math.abs(tmdb.runtime * 60 - movie.duration) : 0
+  return movie.duration && tmdb.runtime ? Math.abs(tmdb.runtime * 60 - movie.duration) : Infinity
 }
 
-export function pickMatch(movie: IMovieSC, candidates: ITmdb[]): ITmdb | undefined {
+function isAcceptable({ score, yearGap, runtimeGap }: { score: number; yearGap: number; runtimeGap: number }) {
+  const sameTitle = score >= minSimilarity && yearGap <= maxYearGap
+  const sameMovie = yearGap <= 1 && runtimeGap <= maxRuntimeGap
+  return sameTitle || sameMovie
+}
+
+export function pickMatch(movie: IMovieSC, candidates: ICandidate[]): ITmdb | undefined {
   return candidates
-    .map((tmdb) => ({ tmdb, score: titleSimilarity(movie, tmdb), gap: yearGap(movie, tmdb) }))
-    .filter(({ score, gap }) => score >= minSimilarity && gap <= maxYearGap)
-    .sort((a, b) => b.score - a.score || a.gap - b.gap || runtimeGap(movie, a.tmdb) - runtimeGap(movie, b.tmdb))[0]
-    ?.tmdb
+    .map((tmdb) => ({
+      tmdb,
+      score: titleSimilarity(movie, tmdb),
+      yearGap: yearGap(movie, tmdb),
+      runtimeGap: runtimeGap(movie, tmdb),
+    }))
+    .filter(isAcceptable)
+    .sort((a, b) => b.score - a.score || a.yearGap - b.yearGap || a.runtimeGap - b.runtimeGap)[0]?.tmdb
 }
 
 export function lookupTerms(movie: IMovieSC) {
