@@ -96,7 +96,7 @@ export class ScrappeJob {
       const shouldUpdate = this.shouldUpdate(existingRecord)
       if (!shouldUpdate) {
         skip('no_update_needed')
-        await Movie.findOneAndUpdate({ id: movie.id }, { ...existingRecord, opsDatas }, { upsert: true })
+        await Movie.updateOne({ id: movie.id }, { 'opsDatas.lastJobDate': now })
         return
       }
 

@@ -1,6 +1,7 @@
 import { MockedLogger } from '@fethcat/logger'
 import { getMax } from '@fethcat/shared/helpers'
-import { IMovie } from '@fethcat/shared/types'
+import { Movie } from '@fethcat/shared/mongo'
+import { IMovie, IMovieSC } from '@fethcat/shared/types'
 import { DateTime } from 'luxon'
 import mockdate from 'mockdate'
 import { ScrappeJob } from '../../../src/jobs/ScrappeJob.js'
@@ -55,6 +56,27 @@ describe('shouldUpdate', () => {
 
   it('should return true when all checks pass', () => {
     expect(createJob().shouldUpdate(record(10, 10))).toBe(true)
+  })
+})
+
+describe('processMovie', () => {
+  const scMovie = { id: 1, title: 'Unfound', stats: { ratingCount: 500, wishCount: 500 } } as IMovieSC
+  const force = settings.scrapper.force
+  beforeEach(() => {
+    settings.scrapper.force = false
+  })
+  afterAll(() => {
+    settings.scrapper.force = force
+  })
+
+  it('should only touch lastJobDate when no update is needed so the unfound flag is kept', async () => {
+    const existingRecord = { id: 1, opsDatas: { lastJobDate: daysAgo(1), lastUpdateDate: daysAgo(10), unfound: true } }
+    vi.spyOn(Movie, 'findOne').mockResolvedValue(existingRecord)
+    const updateOne = vi.spyOn(Movie, 'updateOne').mockResolvedValue({} as never)
+
+    await createJob().processMovie(scMovie, 0)
+
+    expect(updateOne).toHaveBeenCalledWith({ id: 1 }, { 'opsDatas.lastJobDate': DateTime.now().toMillis() })
   })
 })
 
