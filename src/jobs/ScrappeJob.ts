@@ -108,9 +108,23 @@ export class ScrappeJob {
       const popularity = await this.calculatePopularity(body)
       const providers = existingRecord?.providers || []
       await Movie.findOneAndUpdate({ id: movie.id }, { ...body, popularity, opsDatas, providers }, { upsert: true })
+      const previousTmdbId = existingRecord?.tmdb?.tmdbId
+      if (previousTmdbId && previousTmdbId !== tmdb.tmdbId) await this.groupEditions(previousTmdbId)
+      await this.groupEditions(tmdb.tmdbId)
       success()
     } catch (error) {
       failure(error)
+    }
+  }
+
+  async groupEditions(tmdbId: number) {
+    const { success, failure } = this.logger.action('group_editions')
+    try {
+      const main = await Movie.findOne({ 'tmdb.tmdbId': tmdbId }).sort({ 'senscritique.stats.ratingCount': -1 })
+      if (main) await Movie.updateMany({ 'tmdb.tmdbId': tmdbId }, [{ $set: { edition: { $ne: ['$id', main.id] } } }])
+      success()
+    } catch (error) {
+      throw failure(error)
     }
   }
 
@@ -138,7 +152,13 @@ export class ScrappeJob {
 
   isEqual(movie: IMovie, existingRecord: IMovie | null): boolean {
     if (!existingRecord) return false
-    const schema = movieSchema.omit({ providers: true, popularity: true, updatedAt: true, opsDatas: true })
+    const schema = movieSchema.omit({
+      providers: true,
+      popularity: true,
+      updatedAt: true,
+      opsDatas: true,
+      edition: true,
+    })
     return isEqual(schema.parse(movie), schema.parse(existingRecord))
   }
 

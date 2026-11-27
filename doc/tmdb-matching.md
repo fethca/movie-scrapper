@@ -19,3 +19,11 @@ Each Senscritique movie is matched to a TMDB movie through Radarr's lookup (`src
 - The TMDB year must be within 1 year of the production year or the release year.
 
 Among acceptable candidates, the highest similarity wins, then the closest year, then the closest runtime.
+
+## Editions
+
+Senscritique lists special editions (Version longue, Director's Cut, ...) as separate movies, TMDB does not.
+Every Senscritique movie matched to the same TMDB id is considered the same film: the most rated one is the main
+movie, the others get `edition: true`. The API hides editions from the list and returns them as `versions` of a movie.
+
+Groups are recomputed for the new and the previous TMDB id each time a movie is processed.
